@@ -1,0 +1,6 @@
+{
+  "name": "SushiTips Pro",
+  "description": "Professional tip management and distribution system for sushi restaurants. Automates biweekly payouts based on California tax and distribution rules (15% Kitchen / 85% Waitstaff).",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}

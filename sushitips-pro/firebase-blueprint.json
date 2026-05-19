@@ -1,0 +1,70 @@
+{
+  "entities": {
+    "Employee": {
+      "title": "Employee",
+      "description": "A restaurant staff member",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "role": { "type": "string", "enum": ["waiter", "cook", "dishwasher"] },
+        "isActive": { "type": "boolean" }
+      },
+      "required": ["name", "role", "isActive"]
+    },
+    "TipLog": {
+      "title": "Tip Log",
+      "description": "Daily tip record for a specific shift",
+      "type": "object",
+      "properties": {
+        "date": { "type": "string", "format": "date" },
+        "shift": { "type": "string", "enum": ["lunch", "dinner"] },
+        "cash": { "type": "number" },
+        "card": { "type": "number" },
+        "delivery": { "type": "number" },
+        "gratuity": { "type": "number" },
+        "activeEmployeeIds": { "type": "array", "items": { "type": "string" } },
+        "periodId": { "type": "string" }
+      },
+      "required": ["date", "shift", "cash", "card", "delivery", "gratuity", "activeEmployeeIds", "periodId"]
+    },
+    "PayPeriod": {
+      "title": "Pay Period",
+      "description": "Biweekly period for tip distribution",
+      "type": "object",
+      "properties": {
+        "startDate": { "type": "string", "format": "date" },
+        "endDate": { "type": "string", "format": "date" },
+        "isClosed": { "type": "boolean" }
+      },
+      "required": ["startDate", "endDate", "isClosed"]
+    },
+    "Settings": {
+      "title": "Settings",
+      "description": "Global distribution rules",
+      "type": "object",
+      "properties": {
+        "kitchenPercent": { "type": "number" },
+        "waitstaffPercent": { "type": "number" }
+      },
+      "required": ["kitchenPercent", "waitstaffPercent"]
+    }
+  },
+  "firestore": {
+    "employees": {
+      "schema": "Employee",
+      "description": "Collection of all staff members"
+    },
+    "tipLogs": {
+      "schema": "TipLog",
+      "description": "Collection of daily shift logs"
+    },
+    "payPeriods": {
+      "schema": "PayPeriod",
+      "description": "Collection of biweekly pay periods"
+    },
+    "settings": {
+      "schema": "Settings",
+      "description": "Configuration document"
+    }
+  }
+}

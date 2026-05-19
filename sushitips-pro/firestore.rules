@@ -1,0 +1,100 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Global helpers
+    function isSignedIn() {
+      return request.auth != null && request.auth.token.email_verified == true;
+    }
+    
+    function isAdmin() {
+      return isSignedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    match /test/connection {
+      allow read: if true;
+    }
+
+    // --- Employee ---
+    function isValidEmployee(data) {
+      return data.keys().hasAll(['name', 'role', 'isActive']) &&
+             data.keys().size() == 3 &&
+             data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+             data.role in ['waiter', 'cook', 'dishwasher'] &&
+             data.isActive is bool;
+    }
+
+    match /employees/{employeeId} {
+      allow read: if isSignedIn();
+      allow create: if isAdmin() && isValidId(employeeId) && isValidEmployee(request.resource.data);
+      allow update: if (isAdmin() || (isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isActive']))) && isValidEmployee(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    // --- TipLog ---
+    function isValidTipLog(data) {
+      return data.keys().hasAll(['date', 'shift', 'cash', 'card', 'delivery', 'gratuity', 'activeEmployeeIds', 'periodId']) &&
+             data.keys().size() == 8 &&
+             data.date is string && data.date.size() == 10 && // YYYY-MM-DD
+             data.shift in ['lunch', 'dinner'] &&
+             data.cash is number && data.cash >= 0 &&
+             data.card is number && data.card >= 0 &&
+             data.delivery is number && data.delivery >= 0 &&
+             data.gratuity is number && data.gratuity >= 0 &&
+             data.activeEmployeeIds is list && data.activeEmployeeIds.size() <= 60 &&
+             data.periodId is string && data.periodId.size() <= 100;
+    }
+
+    match /tipLogs/{logId} {
+      allow read: if isSignedIn();
+      allow create: if isAdmin() && isValidId(logId) && isValidTipLog(request.resource.data);
+      allow update: if isAdmin() && isValidTipLog(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    // --- PayPeriod ---
+    function isValidPayPeriod(data) {
+      return data.keys().hasAll(['startDate', 'endDate', 'isClosed']) &&
+             data.keys().size() == 3 &&
+             data.startDate is string && data.startDate.size() == 10 &&
+             data.endDate is string && data.endDate.size() == 10 &&
+             data.isClosed is bool;
+    }
+
+    match /payPeriods/{periodId} {
+      allow read: if isSignedIn();
+      allow create: if isAdmin() && isValidId(periodId) && isValidPayPeriod(request.resource.data);
+      allow update: if isAdmin() && isValidPayPeriod(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    // --- Settings ---
+    function isValidSettings(data) {
+      return data.keys().hasAll(['kitchenPercent', 'waitstaffPercent']) &&
+             data.keys().size() == 2 &&
+             data.kitchenPercent is number && data.kitchenPercent >= 0 && data.kitchenPercent <= 100 &&
+             data.waitstaffPercent is number && data.waitstaffPercent >= 0 && data.waitstaffPercent <= 100 &&
+             (data.kitchenPercent + data.waitstaffPercent == 100);
+    }
+
+    match /settings/{settingId} {
+      allow read: if isSignedIn();
+      allow create, update: if isAdmin() && isValidId(settingId) && isValidSettings(request.resource.data);
+    }
+
+    // --- Admins ---
+    match /admins/{adminId} {
+      allow read: if isSignedIn();
+      // Allow the bootstrapped admin to register themselves
+      allow write: if isAdmin() || (isSignedIn() && request.auth.token.email == 'refigueroah@gmail.com' && adminId == request.auth.uid);
+    }
+  }
+}
