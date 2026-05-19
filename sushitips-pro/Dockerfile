@@ -6,8 +6,9 @@ RUN npm install
 COPY . .
 RUN npm run build
 
-# Step 2: Serve the production files using Nginx
+# Step 2: Serve using Nginx with dynamic port routing
 FROM nginx:alpine
 COPY --from=builder /app/dist /usr/share/nginx/html
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+
+# This magical line updates Nginx to listen to whatever port Cloud Run provides at runtime
+CMD exec nginx -g 'daemon off;' -c /etc/nginx/nginx.conf & sed -i "s/listen       80;/listen ${PORT};/" /etc/nginx/conf.d/default.conf && exec nginx -g 'daemon off;'
