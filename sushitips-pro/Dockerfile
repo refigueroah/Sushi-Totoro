@@ -1,4 +1,4 @@
-# Step 1: Build the React/Vite application
+# Step 1: Build the application
 FROM node:18-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
@@ -6,9 +6,18 @@ RUN npm install
 COPY . .
 RUN npm run build
 
-# Step 2: Serve using Nginx with dynamic port routing
-FROM nginx:alpine
-COPY --from=builder /app/dist /usr/share/nginx/html
+# Step 2: Serve the application using a stable Node production server
+FROM node:18-alpine
+WORKDIR /app
 
-# This magical line updates Nginx to listen to whatever port Cloud Run provides at runtime
-CMD exec nginx -g 'daemon off;' -c /etc/nginx/nginx.conf & sed -i "s/listen       80;/listen ${PORT};/" /etc/nginx/conf.d/default.conf && exec nginx -g 'daemon off;'
+# Install a simple, highly efficient production server globally
+RUN npm install -g serve
+
+# Copy only the compiled production files from the builder stage
+COPY --from=builder /app/dist ./dist
+
+# Expose the dynamic port provided by Cloud Run
+EXPOSE 8080
+
+# Run the production server, explicitly binding it to Google's dynamic port variable
+CMD ["sh", "-c", "serve -s dist -l $PORT"]
