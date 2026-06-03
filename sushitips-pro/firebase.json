@@ -1,11 +1,12 @@
 {
   "hosting": {
+    "site": "sushitips", 
     "public": "public",
     "rewrites": [
       {
         "source": "**",
         "run": {
-          "serviceId": "sushitips-pro",
+          "serviceId": "sushitips",
           "region": "us-east1"
         }
       }
