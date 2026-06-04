@@ -1,12 +1,12 @@
 {
   "hosting": {
-    "site": "sushitips", 
-    "public": "public",
+    "site": "sushitips",
+    "public": "dist",  // <--- Use 'dist' instead of 'public'
     "rewrites": [
       {
         "source": "**",
         "run": {
-          "serviceId": "sushitips",
+          "serviceId": "sushitips-pro",
           "region": "us-east1"
         }
       }
