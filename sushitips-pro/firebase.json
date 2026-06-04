@@ -1,14 +1,23 @@
 {
   "hosting": {
     "site": "sushitips",
-    "public": "dist",  // <--- Use 'dist' instead of 'public'
+    "public": "dist",
     "rewrites": [
+      // 1. Rewrite specific paths (e.g., your API routes) to your Cloud Run service.
+      //    Replace "/api/**" with the actual path prefix your Cloud Run service handles.
       {
-        "source": "**",
+        "source": "/api/**", // Example: if your Cloud Run service handles API requests
         "run": {
           "serviceId": "sushitips-pro",
           "region": "us-east1"
         }
+      },
+      // 2. For all other paths (including your client-side routes and the Firebase Auth handler),
+      //    serve the index.html file from your 'dist' folder. This allows your SPA to handle routing
+      //    and, crucially, allows Firebase Hosting to manage the /__/auth/handler path.
+      {
+        "source": "**",
+        "destination": "/index.html"
       }
     ]
   }
