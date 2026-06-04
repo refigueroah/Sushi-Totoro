@@ -3,7 +3,7 @@ service cloud.firestore {
   match /databases/{database}/documents {
     // Default deny
     match /{document=**} {
-      allow read, write: if signin;
+      allow read, write: if isSignedIn;
     }
 
     // Global helpers
